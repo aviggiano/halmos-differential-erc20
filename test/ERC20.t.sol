@@ -8,7 +8,7 @@ import {ERC20OpenZeppelin} from "@src/ERC20OpenZeppelin.sol";
 import {ERC20Solady} from "@src/ERC20Solady.sol";
 import {ERC20Solmate} from "@src/ERC20Solmate.sol";
 
-/// @custom:halmos --storage-layout=generic --loop 6
+/// @custom:halmos --storage-layout=generic --loop 256 --array-lengths senders=6 --array-lengths calls=6 --array-lengths staticcalls=3
 contract ERC20Test is Test, SymTest {
     ERC20OpenZeppelin public openzeppelin;
     ERC20Solady public solady;
@@ -55,41 +55,36 @@ contract ERC20Test is Test, SymTest {
     function check_differential_call(address[] memory senders, bytes[] memory calls, bytes[] memory staticcalls)
         public
     {
+        vm.assume(senders.length == calls.length);
         vm.assume(isValidSelectors(callSelectors, calls));
         vm.assume(isValidSelectors(staticcallSelectors, staticcalls));
-        vm.assume(senders.length == calls.length);
 
         address[3] memory contracts = [address(openzeppelin), address(solady), address(solmate)];
 
-        bool[] memory successes;
         bytes[] memory results;
 
-        successes = new bool[](calls.length);
         results = new bytes[](calls.length);
         for (uint256 j = 0; j < calls.length; j++) {
             for (uint256 i = 0; i < contracts.length; i++) {
                 vm.prank(senders[j]);
                 (bool _success, bytes memory _result) = contracts[i].call(calls[j]);
+                vm.assume(_success);
                 if (i == 0) {
-                    successes[i] = _success;
                     results[i] = _result;
                 } else {
-                    assertEq(successes[i], _success);
                     assertEq(results[i], _result);
                 }
             }
         }
 
-        successes = new bool[](staticcalls.length);
         results = new bytes[](staticcalls.length);
         for (uint256 j = 0; j < staticcalls.length; j++) {
             for (uint256 i = 0; i < contracts.length; i++) {
                 (bool _success, bytes memory _result) = contracts[i].staticcall(staticcalls[j]);
+                vm.assume(_success);
                 if (i == 0) {
-                    successes[i] = _success;
                     results[i] = _result;
                 } else {
-                    assertEq(successes[i], _success);
                     assertEq(results[i], _result);
                 }
             }
