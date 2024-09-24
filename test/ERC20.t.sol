@@ -13,21 +13,24 @@ contract ERC20Test is Test, SymTest {
     ERC20Solady public solady;
     ERC20Solmate public solmate;
 
-    bytes4[] staticcallSelectors = [
-        IERC20.balanceOf.selector,
-        IERC20.allowance.selector,
-        IERC20.name.selector,
-        IERC20.symbol.selector,
-        IERC20.decimals.selector,
-        IERC20.totalSupply.selector
-    ];
-
-    bytes4[] callSelectors = [IERC20.transfer.selector, IERC20.approve.selector, IERC20.transferFrom.selector];
+    bytes4[] staticcallSelectors;
+    bytes4[] callSelectors;
 
     function setUp() public {
         openzeppelin = new ERC20OpenZeppelin("Token", "TOK", 6, msg.sender, 123e18);
         solady = new ERC20Solady("Token", "TOK", 6, msg.sender, 123e18);
         solmate = new ERC20Solmate("Token", "TOK", 6, msg.sender, 123e18);
+
+        staticcallSelectors = [
+            IERC20.balanceOf.selector,
+            IERC20.allowance.selector,
+            IERC20.name.selector,
+            IERC20.symbol.selector,
+            IERC20.decimals.selector,
+            IERC20.totalSupply.selector
+        ];
+
+        callSelectors = [IERC20.transfer.selector, IERC20.approve.selector, IERC20.transferFrom.selector];
     }
 
     function check_differential_staticcall(bytes memory data) public view {
