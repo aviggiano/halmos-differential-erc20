@@ -68,7 +68,7 @@ contract ERC20Test is Test, SymTest {
             for (uint256 i = 0; i < contracts.length; i++) {
                 vm.prank(senders[j]);
                 (bool _success, bytes memory _result) = contracts[i].call(calls[j]);
-                vm.assume(_success);
+                require(_success);
                 if (i == 0) {
                     results[i] = _result;
                 } else {
@@ -81,7 +81,7 @@ contract ERC20Test is Test, SymTest {
         for (uint256 j = 0; j < staticcalls.length; j++) {
             for (uint256 i = 0; i < contracts.length; i++) {
                 (bool _success, bytes memory _result) = contracts[i].staticcall(staticcalls[j]);
-                vm.assume(_success);
+                require(_success);
                 if (i == 0) {
                     results[i] = _result;
                 } else {
