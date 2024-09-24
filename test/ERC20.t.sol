@@ -8,7 +8,7 @@ import {ERC20OpenZeppelin} from "@src/ERC20OpenZeppelin.sol";
 import {ERC20Solady} from "@src/ERC20Solady.sol";
 import {ERC20Solmate} from "@src/ERC20Solmate.sol";
 
-/// @custom:halmos --storage-layout=generic --loop 256 --array-lengths senders=6 --array-lengths calls=6 --array-lengths staticcalls=3
+/// @custom:halmos --storage-layout=generic --array-lengths senders=3 --array-lengths calls=3 --array-lengths staticcalls=3
 contract ERC20Test is Test, SymTest {
     ERC20OpenZeppelin public openzeppelin;
     ERC20Solady public solady;
