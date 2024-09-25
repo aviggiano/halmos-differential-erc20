@@ -7,6 +7,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ERC20OpenZeppelin} from "@src/ERC20OpenZeppelin.sol";
 import {ERC20Solady} from "@src/ERC20Solady.sol";
 import {ERC20Solmate} from "@src/ERC20Solmate.sol";
+import {MockERC20} from "@solmate/test/utils/mocks/MockERC20.sol";
 
 /// @custom:halmos --storage-layout=generic --array-lengths senders=3 --array-lengths calls=3 --array-lengths staticcalls=3 --loop 256
 contract ERC20Test is Test, SymTest {
@@ -18,9 +19,9 @@ contract ERC20Test is Test, SymTest {
     bytes4[] callSelectors;
 
     function setUp() public {
-        openzeppelin = new ERC20OpenZeppelin("Token", "TOK", 6, address(0x1337), 123e18);
-        solady = new ERC20Solady("Token", "TOK", 6, address(0x1337), 123e18);
-        solmate = new ERC20Solmate("Token", "TOK", 6, address(0x1337), 123e18);
+        openzeppelin = new ERC20OpenZeppelin("Token", "TOK", 6);
+        solady = new ERC20Solady("Token", "TOK", 6);
+        solmate = new ERC20Solmate("Token", "TOK", 6);
 
         staticcallSelectors = [
             IERC20.balanceOf.selector,
@@ -28,7 +29,9 @@ contract ERC20Test is Test, SymTest {
             IERC20.name.selector,
             IERC20.symbol.selector,
             IERC20.decimals.selector,
-            IERC20.totalSupply.selector
+            IERC20.totalSupply.selector,
+            MockERC20.burn.selector,
+            MockERC20.mint.selector
         ];
 
         callSelectors = [IERC20.transfer.selector, IERC20.approve.selector, IERC20.transferFrom.selector];

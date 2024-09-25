@@ -8,12 +8,18 @@ contract ERC20Solady is ERC20 {
     string internal symbol_;
     uint8 internal decimals_;
 
-    constructor(string memory _name, string memory _symbol, uint8 _decimals, address owner, uint256 supply) {
+    constructor(string memory _name, string memory _symbol, uint8 _decimals) {
         name_ = _name;
         symbol_ = _symbol;
         decimals_ = _decimals;
+    }
 
-        _mint(owner, supply);
+    function mint(address to, uint256 amount) public {
+        _mint(to, amount);
+    }
+
+    function burn(address from, uint256 amount) public {
+        _burn(from, amount);
     }
 
     function name() public view virtual override returns (string memory) {
