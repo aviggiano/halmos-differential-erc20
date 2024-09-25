@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
+import {console} from "lib/forge-std/src/console.sol";
 import {SymTest} from "halmos-cheatcodes/SymTest.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ERC20OpenZeppelin} from "@src/ERC20OpenZeppelin.sol";
@@ -41,40 +42,56 @@ contract ERC20Test is Test, SymTest {
         ];
     }
 
-    function check_differential_erc20(address[] memory senders, uint256 n_staticcalls) public {
-        vm.assume(n_staticcalls <= staticcallSelectors.length);
-
+    function test_differential_erc20(address[] memory senders, bytes memory call, bytes memory staticcall) public {
+        for (uint256 i = 0; i < senders.length; i++) {
+            vm.assume(senders[i] != address(0));
+        }
         address[3] memory contracts = [address(openzeppelin), address(solady), address(solmate)];
 
-        bytes[] memory results;
+        bytes memory result;
 
-        results = new bytes[](senders.length);
         for (uint256 j = 0; j < senders.length; j++) {
             for (uint256 i = 0; i < contracts.length; i++) {
-                bytes memory call = svm.createCalldata("MockERC20");
                 vm.prank(senders[j]);
                 (bool _success, bytes memory _result) = contracts[i].call(call);
                 vm.assume(_success);
                 if (i == 0) {
-                    results[i] = _result;
+                    result = _result;
                 } else {
-                    assertEq(results[i], _result);
+                    assertEq(result, _result);
                 }
             }
         }
 
-        results = new bytes[](n_staticcalls);
-        for (uint256 j = 0; j < n_staticcalls; j++) {
-            for (uint256 i = 0; i < contracts.length; i++) {
-                bytes memory staticcall = svm.createCalldata("MockERC20", true);
-                (bool _success, bytes memory _result) = contracts[i].staticcall(staticcall);
-                vm.assume(_success);
-                if (i == 0) {
-                    results[i] = _result;
-                } else {
-                    assertEq(results[i], _result);
-                }
+        for (uint256 i = 0; i < contracts.length; i++) {
+            (bool _success, bytes memory _result) = contracts[i].staticcall(staticcall);
+            vm.assume(_success);
+            if (i == 0) {
+                result = _result;
+            } else {
+                assertEq(result, _result);
             }
         }
+    }
+
+    function check_differential_erc20(address[] memory senders) public {
+        bytes memory call = svm.createCalldata("MockERC20");
+        bytes memory staticcall = svm.createCalldata("MockERC20", true);
+        test_differential_erc20(senders, call, staticcall);
+    }
+
+    function test_differential_erc20_concrete() public {
+        uint256 p_amount_uint256_21 = 0;
+        address p_from_address_19 = 0x7fFFfFfFFFfFFFFfFffFfFfFfffFFfFfFffFFFFf;
+        address p_to_address_20 = 0x2000000000000000000000000000000000000000;
+
+        address[] memory p_senders = new address[](2);
+        p_senders[0] = 0x2000000000000000000000000000000000000000;
+        p_senders[1] = 0x4000000000000000000000000000000000000000;
+
+        bytes memory call =
+            abi.encodeCall(IERC20.transferFrom, (p_from_address_19, p_to_address_20, p_amount_uint256_21));
+
+        return test_differential_erc20(p_senders, call, "");
     }
 }
