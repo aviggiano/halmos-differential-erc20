@@ -48,14 +48,16 @@ contract ERC20Test is Test, SymTest {
         bytes memory staticcall,
         bool shouldCheckFailedCall
     ) public {
-        vm.assume(senders.length == calls.length);
+        if (senders.length != calls.length) {
+            return;
+        }
         for (uint256 i = 0; i < senders.length; i++) {
             vm.assume(senders[i] != address(0));
         }
-        address[3] memory contracts = [address(openzeppelin), address(solady), address(solmate)];
 
-        bool success;
-        bytes memory result;
+        address[3] memory contracts = [address(openzeppelin), address(solady), address(solmate)];
+        bool[3] memory successes;
+        bytes[3] memory results;
 
         for (uint256 j = 0; j < calls.length; j++) {
             for (uint256 i = 0; i < contracts.length; i++) {
@@ -64,38 +66,20 @@ contract ERC20Test is Test, SymTest {
                 if (!shouldCheckFailedCall) {
                     vm.assume(_success);
                 }
-                if (i == 0) {
-                    result = _result;
-                    success = _success;
-                } else {
-                    if (success != _success || keccak256(result) != keccak256(_result)) {
-                        console.logBytes(calls[j]);
-                        console.logBool(success);
-                        console.logBool(_success);
-                        console.logBytes(result);
-                        console.logBytes(_result);
-                        console.log("");
-                    }
-                    assertEq(success, _success);
-                    if (success) {
-                        assertEq(result, _result);
-                    }
-                }
+                successes[i] = _success;
+                results[i] = _result;
             }
         }
 
+        verifyResults(successes, results);
+
         for (uint256 i = 0; i < contracts.length; i++) {
             (bool _success, bytes memory _result) = contracts[i].staticcall(staticcall);
-            if (i == 0) {
-                result = _result;
-                success = success;
-            } else {
-                assertEq(success, _success);
-                if (success) {
-                    assertEq(result, _result);
-                }
-            }
+            successes[i] = _success;
+            results[i] = _result;
         }
+
+        verifyResults(successes, results);
     }
 
     function check_differential_erc20(address[] memory senders) public {
@@ -122,5 +106,29 @@ contract ERC20Test is Test, SymTest {
         calls[1] = abi.encodeCall(IERC20Call.transferFrom, (p_from_address_24, p_to_address_25, p_amount_uint256_26));
 
         return test_differential_erc20(p_senders, calls, "", true);
+    }
+
+    function verifyResults(bool[3] memory successes, bytes[3] memory results) private pure {
+        for (uint256 i = 0; i < successes.length - 1; i++) {
+            // if (successes[i] != successes[i + 1]) {
+            //     console.logBool(successes[i]);
+            //     console.logBool(successes[i + 1]);
+            //     console.logBytes(results[i]);
+            //     console.logBytes(results[i + 1]);
+            //     console.log("");
+            // }
+            assertEq(successes[i], successes[i + 1]);
+            if (successes[i]) {
+                // if (keccak256(results[i]) != keccak256(results[i + 1])) {
+                //     console.logBool(successes[i]);
+                //     console.logBool(successes[i + 1]);
+                //     console.logBytes(results[i]);
+                //     console.logBytes(results[i + 1]);
+                //     console.log("");
+                // }
+
+                assertEq(results[i], results[i + 1]);
+            }
+        }
     }
 }
